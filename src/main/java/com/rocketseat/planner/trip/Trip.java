@@ -9,12 +9,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
 import lombok.Setter;
 
 @Entity
+@Table(name = "trips")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,6 +43,10 @@ public class Trip {
 
     @Column(name = "owner_email", nullable = false)
     private String ownerEmail;
+
+    public UUID getId() {
+        return id;
+    }
 
     public Trip(TripRequestPayload data) {
         this.destination    = data.destination();
