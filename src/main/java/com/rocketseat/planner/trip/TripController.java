@@ -1,5 +1,8 @@
 package com.rocketseat.planner.trip;
 
+import java.sql.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -8,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,5 +46,41 @@ public class TripController {
         }
 
         return ResponseEntity.ok(trip.get());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Trip> updateTrip(@PathVariable UUID id, @RequestBody TripRequestPayload payload) {
+        Optional<Trip> trip = this.repository.findById(id);
+
+        if (!trip.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Trip rawTrip = trip.get();
+
+        rawTrip.setStartsAt(LocalDateTime.parse(payload.starts_at(), DateTimeFormatter.ISO_DATE_TIME));
+        rawTrip.setEndsAt(LocalDateTime.parse(payload.ends_at(), DateTimeFormatter.ISO_DATE_TIME));
+        rawTrip.setDestination(payload.destination());
+
+        this.repository.save(rawTrip);
+
+        return ResponseEntity.ok(rawTrip);
+    }
+
+    @GetMapping("/{id}/confirm")
+    public ResponseEntity<Trip> confirmTrip(@PathVariable UUID id) {
+        Optional<Trip> trip = this.repository.findById(id);
+        
+        if (!trip.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Trip rawTrip = trip.get();
+        rawTrip.setIsConfirmed(true);
+
+        this.repository.save(rawTrip);
+        this.participantService.triggerEmailConfirmation(id);
+
+        return ResponseEntity.ok(rawTrip);
     }
 }
